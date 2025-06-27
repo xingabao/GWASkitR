@@ -6,4 +6,7 @@ To install the latest development version of the package using the devtools pack
 remotes::install_github("xingabao/GWASkitR")
 ```
 
+```R
+source("https://github.com/xingabao/GWASkitR/tree/master/install.R")
+```
 

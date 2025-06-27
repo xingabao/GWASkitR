@@ -1,0 +1,13 @@
+if (!require("remotes")) install.packages("remotes")
+if (!require("BiocManager")) install.packages("BiocManager")
+install.packages('coloc')
+install.packages("ieugwasr")
+remotes::install_version("RcppEigen", version = "0.3.3.9.3")
+remotes::install_github("jrs95/geni.plots", build_vignettes = TRUE)
+remotes::install_github("jrs95/hyprcoloc", build_vignettes = TRUE)
+BiocManager::install("MungeSumstats", update = FALSE, ask = FALSE)
+BiocManager::install("GenomicRanges", update = FALSE, ask = FALSE)
+BiocManager::install("GenomeInfoDb", update = FALSE, ask = FALSE)
+BiocManager::install("rtracklayer", update = FALSE, ask = FALSE)
+
+remotes::install_github("xingabao/GWASkitR")
