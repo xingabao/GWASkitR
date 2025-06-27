@@ -22,7 +22,11 @@ Imports:
 	RcppEigen (>= 0.3.3.9.3),
 	data.table,
 	coloc,
-	ieugwasr
+	ieugwasr,
+	MungeSumstats,
+	GenomicRanges,
+	GenomeInfoDb,
+	rtracklayer
 Remotes:
     jrs95/hyprcoloc
 Depends:
