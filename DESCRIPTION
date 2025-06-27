@@ -1,0 +1,36 @@
+Package: GWASkitR
+Type: Package
+Title: Package for post-GWAS analysis
+Version: 0.1.0
+Authors@R: c(
+    person(
+      "Abao", "Xing",
+      email = "albertxn7@gmail.com",
+      role = c("aut", "cre")
+    )
+  )
+Description: General-purpose foundational package for post-GWAS analysis.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Imports:
+	glue,
+	grid,
+	dplyr,
+	logger,
+	ggplot2 (>= 3.5.0),
+	RcppEigen (>= 0.3.3.9.3),
+	data.table,
+	coloc,
+	ieugwasr,
+	GenomicRanges,
+	GenomeInfoDb,
+	rtracklayer
+Remotes:
+    jrs95/hyprcoloc
+Depends:
+    R (>= 4.0.0)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+RoxygenNote: 7.3.2
