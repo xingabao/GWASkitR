@@ -23,6 +23,7 @@ Imports:
 	data.table,
 	coloc,
 	ieugwasr,
+	BiocManager,
 	MungeSumstats,
 	GenomicRanges,
 	GenomeInfoDb,
