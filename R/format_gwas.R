@@ -198,28 +198,25 @@ format_gwas.default <- function(
     verbose = TRUE
 ) {
 
+  sumstats.o <- sumstats
   check.file.path(file.path = save.path, suffix = c('tsv', 'txt'), verbose = verbose, stop_on_error = TRUE)
 
   # Start of the function
   if (verbose) start.time <- Sys.time()
   if (verbose) logger::log_info("Starting GWAS summary statistics formatting.")
 
-  # If input is a file path, read the file
-  if (is.character(sumstats) && file.exists(sumstats)) {
-    if (any(endsWith(sumstats, suffix = c('vcf', 'vcf.gz')))) {
-      if (verbose) logger::log_info("Detected VCF file: '{sumstats}'. Reading as VCF.")
-      sumstats <- read.vcf(vcfFile = sumstats, multiple = FALSE, remove_qual_filter_info = TRUE, save.path = NULL, verbose = verbose)
-      if (verbose) logger::log_info("VCF file loaded successfully.")
-    } else {
-      if (verbose) logger::log_info("Detected local file: '{sumstats}'. Reading as table.")
-      sumstats <- as.data.frame(data.table::fread(sumstats, showProgress = verbose))
-      if (verbose) logger::log_info("Local file loaded successfully.")
+  if (TRUE) {
+    # If input is a file path, read the file
+    if (is.character(sumstats) && file.exists(sumstats)) {
+      if (any(endsWith(sumstats, suffix = c('vcf', 'vcf.gz')))) {
+        sumstats <- read.vcf(vcfFile = sumstats, multiple = FALSE, remove_qual_filter_info = TRUE, save.path = NULL, verbose = FALSE, nrows = 1000)
+      } else {
+        sumstats <- as.data.frame(data.table::fread(sumstats, showProgress = FALSE), nrows = 1000)
+      }
+    } else if (is.character(sumstats)) {
+      if (verbose) logger::log_error("The file '{sumstats}' does not exist.")
+      stop("Input summary statistics file does not exist: ", sumstats)
     }
-  } else if (is.character(sumstats)) {
-    if (verbose) logger::log_error("The file '{sumstats}' does not exist.")
-    stop("Input summary statistics file does not exist: ", sumstats)
-  } else {
-    if (verbose) logger::log_info("Input provided as data.frame or data.table. Proceeding.")
   }
 
   # Collect the required columns
@@ -241,6 +238,25 @@ format_gwas.default <- function(
     if (verbose) logger::log_warn("These are the column names in the input data: {paste(names(sumstats), collapse=', ')}")
     if (verbose) logger::log_info("Preview of the first few rows of input data:")
     print(utils::head(sumstats))
+  }
+
+  # If input is a file path, read the file
+  sumstats <- sumstats.o
+  if (is.character(sumstats) && file.exists(sumstats)) {
+    if (any(endsWith(sumstats, suffix = c('vcf', 'vcf.gz')))) {
+      if (verbose) logger::log_info("Detected VCF file: '{sumstats}'. Reading as VCF.")
+      sumstats <- read.vcf(vcfFile = sumstats, multiple = FALSE, remove_qual_filter_info = TRUE, save.path = NULL, verbose = verbose)
+      if (verbose) logger::log_info("VCF file loaded successfully.")
+    } else {
+      if (verbose) logger::log_info("Detected local file: '{sumstats}'. Reading as table.")
+      sumstats <- as.data.frame(data.table::fread(sumstats, showProgress = verbose))
+      if (verbose) logger::log_info("Local file loaded successfully.")
+    }
+  } else if (is.character(sumstats)) {
+    if (verbose) logger::log_error("The file '{sumstats}' does not exist.")
+    stop("Input summary statistics file does not exist: ", sumstats)
+  } else {
+    if (verbose) logger::log_info("Input provided as data.frame or data.table. Proceeding.")
   }
 
   if (verbose) logger::log_info("Selecting required columns: {paste(.cols, collapse=', ')}")
@@ -269,9 +285,11 @@ format_gwas.default <- function(
   }
 
   # Log completion and execution time
-  if (verbose) end.time <- Sys.time()
-  if (verbose) execution.time <- end.time - start.time
-  if (verbose) logger::log_info("GWAS summary statistics formatting completed in {round(execution.time, 2)} seconds.")
+  if (verbose) execution.time <- Sys.time() - start.time
+  if (verbose) logger::log_info("GWAS summary statistics formatting completed in {round(execution.time, 2)} minutes")
+
+  gc()
+
   return(sumstats.dt %>% dplyr::as_tibble())
 }
 

@@ -68,20 +68,20 @@ read.vcf <- function(
   if (!is.null(nrows)) {
     if (is.numeric(nrows)) {
       if (length(nrows) != 1 || is.na(nrows)) {
-        logger::log_error("Parameter 'nrows' must be a single, non-NA numeric value or NULL.")
+        if (verbose) logger::log_error("Parameter 'nrows' must be a single, non-NA numeric value or NULL.")
         stop("Parameter 'nrows' must be a single, non-NA numeric value or NULL.")
       } else if (nrows %% 1 != 0) {
-        logger::log_warn("Parameter 'nrows' is not an integer. Rounding to the nearest integer.")
+        if (verbose) logger::log_warn("Parameter 'nrows' is not an integer. Rounding to the nearest integer.")
         nrows <- as.integer(round(nrows))
-        logger::log_info("nrows set to {nrows}")
+        if (verbose) logger::log_info("nrows set to {nrows}")
       } else if (nrows < 0) {
-        logger::log_warn("Parameter 'nrows' is negative. Resetting to NULL (read all rows).")
+        if (verbose) logger::log_warn("Parameter 'nrows' is negative. Resetting to NULL (read all rows).")
         nrows <- NULL
       } else {
-        logger::log_info("nrows set to {nrows}")
+        if (verbose) logger::log_info("nrows set to {nrows}")
       }
     } else {
-      logger::log_error("Parameter 'nrows' must be numeric or NULL.")
+      if (verbose) logger::log_error("Parameter 'nrows' must be numeric or NULL.")
       stop("Parameter 'nrows' must be numeric or NULL.")
     }
   }
