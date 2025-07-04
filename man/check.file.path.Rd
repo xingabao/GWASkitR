@@ -7,7 +7,7 @@
 check.file.path(
   file.path,
   suffix = c("txt", "tsv"),
-  verbose = FALSE,
+  verbose = TRUE,
   stop_on_error = FALSE
 )
 }

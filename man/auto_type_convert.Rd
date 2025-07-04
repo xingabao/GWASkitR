@@ -4,10 +4,13 @@
 \alias{auto_type_convert}
 \title{Automatically Convert Data Frame Column Types}
 \usage{
-auto_type_convert(df, n_check = 1000, verbose = FALSE)
+auto_type_convert(df, exclusion = c(), n_check = 1000, verbose = TRUE)
 }
 \arguments{
 \item{df}{A data frame whose columns require type conversion.}
+
+\item{exclusion}{Character vector. Names of columns to exclude from type conversion.
+Default is an empty vector \code{c()}, meaning no columns are excluded.}
 
 \item{n_check}{Integer. The number of initial rows to use for type inference.
 Default is 1000. If the data frame has fewer rows, all rows are used.}
@@ -43,7 +46,7 @@ sumstats$se <- as.character(sumstats$se)
 sumstats$eaf <- as.character(sumstats$eaf)
 str(sumstats)
 
-df <- GWASkitR:::auto_type_convert(df = sumstats, verbose = FALSE)
+df <- GWASkitR:::auto_type_convert(df = sumstats, exclusion = c("se"), verbose = TRUE)
 
 # Check the structure of the converted data frame
 str(df)

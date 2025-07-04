@@ -14,6 +14,7 @@
 #' @param save.path Character string or \code{NULL}. Directory path to save parsed
 #'   data for each sample as a tab-separated text file. If \code{NULL}, no files are
 #'   saved. Default is \code{NULL}.
+#' @param nrows Numeric or \code{NULL}. The maximum number of rows to read from the VCF file.
 #' @param verbose Logical. If \code{TRUE}, prints progress and debugging messages
 #'   using the \code{logger} package. Default is \code{FALSE}.
 #'
@@ -37,7 +38,7 @@
 #' vcf.file <- system.file("extdata", "ieu-a-2.vcf.gz", package = "GWASkitR")
 #'
 #' # Read and parse data for a single sample
-#' sumstats.dt <- read.vcf(vcfFile = vcf.file, verbose = FALSE)
+#' sumstats.dt <- read.vcf(vcfFile = vcf.file, verbose = TRUE)
 #'
 #' # Display the first few rows
 #' head(sumstats.dt)
@@ -55,12 +56,35 @@ read.vcf <- function(
     multiple = FALSE,
     remove_qual_filter_info = TRUE,
     save.path = NULL,
-    verbose = FALSE
+    nrows = NULL,
+    verbose = TRUE
 ) {
 
   # Info log: Starting file loading
   if (verbose) logger::log_info("Starting to load GWAS summary data from VCF file:")
   if (verbose) logger::log_info("{vcfFile}")
+
+  # Check and adjust nrows parameter
+  if (!is.null(nrows)) {
+    if (is.numeric(nrows)) {
+      if (length(nrows) != 1 || is.na(nrows)) {
+        logger::log_error("Parameter 'nrows' must be a single, non-NA numeric value or NULL.")
+        stop("Parameter 'nrows' must be a single, non-NA numeric value or NULL.")
+      } else if (nrows %% 1 != 0) {
+        logger::log_warn("Parameter 'nrows' is not an integer. Rounding to the nearest integer.")
+        nrows <- as.integer(round(nrows))
+        logger::log_info("nrows set to {nrows}")
+      } else if (nrows < 0) {
+        logger::log_warn("Parameter 'nrows' is negative. Resetting to NULL (read all rows).")
+        nrows <- NULL
+      } else {
+        logger::log_info("nrows set to {nrows}")
+      }
+    } else {
+      logger::log_error("Parameter 'nrows' must be numeric or NULL.")
+      stop("Parameter 'nrows' must be numeric or NULL.")
+    }
+  }
 
   # Check file existence
   if (!file.exists(vcfFile)) {
@@ -70,7 +94,12 @@ read.vcf <- function(
 
   # Try reading VCF lines, catch errors
   lines <- tryCatch({
-    data.table::fread(vcfFile, fill = TRUE, header = FALSE)$V1
+    if (is.null(nrows)) {
+      data.table::fread(vcfFile, fill = TRUE, header = FALSE, showProgress = verbose)$V1
+    } else {
+      if (verbose) logger::log_info("nrows={nrows}. Displaying only the first {nrows} lines.")
+      data.table::fread(vcfFile, fill = TRUE, header = FALSE, nrows = nrows, showProgress = verbose)$V1
+    }
   }, error = function(e) {
     if (verbose) logger::log_error("Failed to read VCF file: {vcfFile}")
     if (verbose) logger::log_error("Error message: {e$message}")
@@ -80,19 +109,25 @@ read.vcf <- function(
   # Debug log: VCF file line count
   if (verbose) logger::log_debug("Number of lines read from VCF: {length(lines)}")
 
-  # Initialize vectors to store FORMAT lines, data lines, and header line
+  # Initialize vectors to store FORMAT lines and header line
   format.lines <- c()
-  data.lines <- c()
   header.line <- NULL
 
-  # Iterate over all lines to separate format lines, header, and data lines
-  for (l in lines) {
-    if (startsWith(l, "##FORMAT")) {
-      format.lines <- c(format.lines, l)
-    } else if (startsWith(l, "#CHR")) {
+  # Iterate over lines and stop when a non-comment line with more than 8 tab-separated fields is found
+  for (i in seq_along(lines)) {
+    l <- lines[i]
+    if (startsWith(l, "#CHR")) {
       header.line <- l
-    } else if (!startsWith(l, "##")) {
-      data.lines <- c(data.lines, l)
+    } else if (startsWith(l, "##FORMAT")) {
+      format.lines <- c(format.lines, l)
+    } else if (!startsWith(l, "#")) {
+      # Split the line by tab and check the number of fields
+      fields <- unlist(strsplit(l, "\t"))
+      if (length(fields) > 8) {
+        # Assign the current line and all remaining lines to data.lines
+        data.lines <- lines[i:length(lines)]
+        break  # Terminate the loop
+      }
     }
   }
 
@@ -117,7 +152,7 @@ read.vcf <- function(
 
   # Read data lines as a data.frame
   DF <- tryCatch({
-    data.table::fread(text = paste(data.lines, collapse = "\n"), sep = "\t", header = FALSE)
+    data.table::fread(text = paste(data.lines, collapse = "\n"), sep = "\t", header = FALSE, showProgress = FALSE)
   }, error = function(e) {
     if (verbose) logger::log_error("Failed to read VCF data lines.")
     if (verbose) logger::log_error("Error message: {e$message}")
@@ -164,6 +199,8 @@ read.vcf <- function(
     }
   }
 
+  if (!multiple) { sample.cols <- sample.cols[1] }
+
   data = list()
   DF.this <- data.frame()
   if ("FORMAT" %in% names(DF)) {
@@ -173,13 +210,85 @@ read.vcf <- function(
       if (verbose) logger::log_warn("FORMAT field is empty or malformed.")
     } else {
       for (sample.col in sample.cols) {
-        if (verbose) logger::log_info("Parsing sample column: {sample.col}")
-        DF.this <- DF %>% dplyr::select(all_of(albert.cols))
-        SEs <- lapply(DF[[sample.col]], function(x) unlist(strsplit(x, ":")))
+
+        if (verbose) logger::log_info("Starting parsing for sample column: {sample.col}")
+
+        if (TRUE) {
+          # Select base columns from DF
+          tryCatch({
+            DF.this <- DF %>% dplyr::select(all_of(albert.cols))
+            if (verbose) logger::log_info("Successfully selected base columns: {paste(albert.cols, collapse = ', ')} for sample {sample.col}")
+          }, error = function(e) {
+            if (verbose) logger::log_error("Failed to select base columns for sample {sample.col}: {conditionMessage(e)}")
+            stop("Error in selecting base columns: ", conditionMessage(e))
+          })
+
+          # Extract FORMAT subfield names
+          tryCatch({
+            FTs <- unlist(strsplit(DF$FORMAT[1], ":"))
+            if (verbose) logger::log_info("Extracted FORMAT subfields: {paste(FTs, collapse = ', ')} from first row for sample {sample.col}")
+            if (length(FTs) == 0 && verbose) logger::log_warn("No FORMAT subfields found in first row for sample {sample.col}")
+          }, error = function(e) {
+            if (verbose) logger::log_error("Failed to extract FORMAT subfields for sample {sample.col}: {conditionMessage(e)}")
+            stop("Error in extracting FORMAT subfields: ", conditionMessage(e))
+          })
+
+          # Split sample column data by ':'
+          tryCatch({
+            split_data <- strsplit(DF[[sample.col]], ":", fixed = TRUE)
+            if (verbose) logger::log_info("Successfully split data in sample column {sample.col} into subfields")
+          }, error = function(e) {
+            if (verbose) logger::log_error("Failed to split data in sample column {sample.col}: {conditionMessage(e)}")
+            stop("Error in splitting sample column data: ", conditionMessage(e))
+          })
+
+          # Determine maximum length of split data for matrix alignment
+          tryCatch({
+            max_len <- max(lengths(split_data))
+            if (verbose) logger::log_info("Determined maximum subfield length as {max_len} for sample {sample.col}")
+            if (max_len == 0 && verbose) logger::log_warn("Maximum subfield length is 0 for sample {sample.col}, no data to process")
+          }, error = function(e) {
+            if (verbose) logger::log_error("Failed to determine maximum subfield length for sample {sample.col}: {conditionMessage(e)}")
+            stop("Error in determining maximum subfield length: ", conditionMessage(e))
+          })
+
+          # Convert split data into a matrix with NA padding
+          tryCatch({
+            split_matrix <- do.call(rbind, lapply(split_data, function(x) c(x, rep(NA, max_len - length(x)))))
+            if (verbose) logger::log_info("Successfully created matrix from split data with dimensions {dim(split_matrix)[1]} x {dim(split_matrix)[2]} for sample {sample.col}")
+          }, error = function(e) {
+            if (verbose) logger::log_error("Failed to create matrix from split data for sample {sample.col}: {conditionMessage(e)}")
+            stop("Error in creating matrix from split data: ", conditionMessage(e))
+          })
+
+          # Assign each subfield as a new column, excluding 'ID'
+          tryCatch({
+            for (i in seq_along(FTs)) {
+              if (FTs[i] != 'ID') {
+                DF.this[[FTs[i]]] <- split_matrix[, i]
+                if (verbose) logger::log_info("Assigned subfield '{FTs[i]}' as new column for sample {sample.col}")
+              } else {
+                if (verbose) logger::log_info("Skipped subfield 'ID' for sample {sample.col} as it is excluded from assignment")
+              }
+            }
+            if (verbose) logger::log_info("Completed assignment of subfields to new columns for sample {sample.col}")
+          }, error = function(e) {
+            if (verbose) logger::log_error("Failed to assign subfields to new columns for sample {sample.col}: {conditionMessage(e)}")
+            stop("Error in assigning subfields to new columns: ", conditionMessage(e))
+          })
+        } else {
+          DF.this <- DF %>% dplyr::select(all_of(albert.cols))
+          FTs <- unlist(strsplit(DF$FORMAT[1], ":"))
+          split_data <- strsplit(DF[[sample.col]], ":", fixed = TRUE)
+          max_len <- max(lengths(split_data))
+          split_matrix <- do.call(rbind, lapply(split_data, function(x) c(x, rep(NA, max_len - length(x)))))
+        }
+
         # Assign each subfield as a new column
         for (i in seq_along(FTs)) {
-          DF.this[[FTs[i]]] <- sapply(SEs, function(x) if (length(x) >= i) x[i] else NA)
+          if (FTs[i] != 'ID') DF.this[[FTs[i]]] <- split_matrix[, i]
         }
+
         # Convert LP (-log10 p-value) to PVAL if necessary
         if (log10) {
           if (verbose) logger::log_info("Converting -log10 p-value (LP) to normal p-value for sample: {sample.col}")
@@ -194,7 +303,7 @@ read.vcf <- function(
         }
         # Auto-convert column types using custom function
         DF.this <- tryCatch({
-          auto_type_convert(df = DF.this, n_check = 1000, verbose = verbose)
+          auto_type_convert(df = DF.this, exclusion = c('CHR'), n_check = 1000, verbose = verbose)
         }, error = function(e) {
           if (verbose) logger::log_warn("auto_type_convert failed for sample {sample.col}: {e$message}")
           DF.this
@@ -226,3 +335,4 @@ read.vcf <- function(
   if (verbose) logger::log_info("Returning parsed data for {length(data)} samples as a list.")
   return(data)
 }
+

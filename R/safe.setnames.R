@@ -22,7 +22,7 @@
 #' @importFrom logger log_info
 #' @importFrom data.table setnames
 #'
-safe.setnames <- function(dt, old, new, verbose = FALSE) {
+safe.setnames <- function(dt, old, new, verbose = TRUE) {
   # Check if old and new names are different before renaming
   if (!identical(old, new)) {
     # Log the renaming operation if verbose is TRUE

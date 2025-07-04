@@ -4,7 +4,7 @@
 \alias{safe.setnames}
 \title{Safely Rename Columns in a Data Table}
 \usage{
-safe.setnames(dt, old, new, verbose = FALSE)
+safe.setnames(dt, old, new, verbose = TRUE)
 }
 \arguments{
 \item{dt}{Data table, the input data table whose column needs to be renamed.}

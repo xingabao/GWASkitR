@@ -6,6 +6,8 @@
 #' initially read as character but should be of a different type.
 #'
 #' @param df A data frame whose columns require type conversion.
+#' @param exclusion Character vector. Names of columns to exclude from type conversion.
+#'   Default is an empty vector \code{c()}, meaning no columns are excluded.
 #' @param n_check Integer. The number of initial rows to use for type inference.
 #'   Default is 1000. If the data frame has fewer rows, all rows are used.
 #' @param verbose Logical. If \code{TRUE}, prints progress and debugging messages
@@ -32,15 +34,14 @@
 #' sumstats$eaf <- as.character(sumstats$eaf)
 #' str(sumstats)
 #'
-#' df <- GWASkitR:::auto_type_convert(df = sumstats, verbose = FALSE)
+#' df <- GWASkitR:::auto_type_convert(df = sumstats, exclusion = c("se"), verbose = TRUE)
 #'
 #' # Check the structure of the converted data frame
 #' str(df)
 #' }
 #'
 #' @importFrom logger log_info log_debug log_warn log_error
-#'
-auto_type_convert <- function(df, n_check = 1000, verbose = FALSE) {
+auto_type_convert <- function(df, exclusion = c(), n_check = 1000, verbose = TRUE) {
 
   if (verbose) logger::log_info("Starting automatic type conversion for data frame with {ncol(df)} columns and {nrow(df)} rows.")
 
@@ -75,6 +76,10 @@ auto_type_convert <- function(df, n_check = 1000, verbose = FALSE) {
 
   # Loop through each column and apply the inferred conversion
   for (col in names(df)) {
+    if (col %in% exclusion) {
+      if (verbose) logger::log_info("Column '{col}' is excluded from conversion: skipping due to inclusion in [{paste(exclusion, collapse = ', ')}].")
+      next
+    }
     old_class <- class(df[[col]])
     target_type <- col_types[col]
     # Only convert if the class is different from the inferred type

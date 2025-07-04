@@ -105,7 +105,7 @@ mixer.dt <- format_gwas(
   col.se = "se",
   col.pval = "pval",
   col.metrics.set = "BETA",
-  verbose = FALSE
+  verbose = TRUE
 )
 
 # Check the result

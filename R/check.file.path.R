@@ -17,7 +17,7 @@
 #' check.file.path("")                   # FALSE
 #' check.file.path("file.doc", suffix = c("txt", "tsv"))  # FALSE
 #'
-check.file.path <- function(file.path, suffix = c('txt', 'tsv'), verbose = FALSE, stop_on_error = FALSE) {
+check.file.path <- function(file.path, suffix = c('txt', 'tsv'), verbose = TRUE, stop_on_error = FALSE) {
   # Argument type and content checks
 
   if (is.null(file.path) || !is.character(file.path) || length(file.path) != 1 || nchar(file.path) == 0) {

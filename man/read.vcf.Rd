@@ -9,7 +9,8 @@ read.vcf(
   multiple = FALSE,
   remove_qual_filter_info = TRUE,
   save.path = NULL,
-  verbose = FALSE
+  nrows = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ file. If \code{FALSE}, only the first sample is processed. Default is \code{FALS
 \item{save.path}{Character string or \code{NULL}. Directory path to save parsed
 data for each sample as a tab-separated text file. If \code{NULL}, no files are
 saved. Default is \code{NULL}.}
+
+\item{nrows}{Numeric or \code{NULL}. The maximum number of rows to read from the VCF file.}
 
 \item{verbose}{Logical. If \code{TRUE}, prints progress and debugging messages
 using the \code{logger} package. Default is \code{FALSE}.}
@@ -56,7 +59,7 @@ library(GWASkitR)
 vcf.file <- system.file("extdata", "ieu-a-2.vcf.gz", package = "GWASkitR")
 
 # Read and parse data for a single sample
-sumstats.dt <- read.vcf(vcfFile = vcf.file, verbose = FALSE)
+sumstats.dt <- read.vcf(vcfFile = vcf.file, verbose = TRUE)
 
 # Display the first few rows
 head(sumstats.dt)

@@ -50,7 +50,7 @@
 #'   col.se.set = "se",
 #'   col.pval.set = "pval",
 #'   col.nsample.set = "nsamples",
-#'   verbose = FALSE
+#'   verbose = TRUE
 #' )
 #' head(sumstats.dt)
 #'
@@ -75,7 +75,7 @@
 #'   col.eaf.set = "eaf",
 #'   col.se.set = "se",
 #'   col.pval.set = "pval",
-#'   verbose = FALSE
+#'   verbose = TRUE
 #' )
 #' head(sumstats.dt)
 #'
@@ -103,7 +103,7 @@
 #'   col.se.set = "se",
 #'   col.pval.set = "pval",
 #'   col.nsample.set = "nsample",
-#'   verbose = FALSE
+#'   verbose = TRUE
 #' )
 #' head(sumstats.dt)
 #' }
@@ -345,7 +345,7 @@ format_gwas.default <- function(
 #'   col.se = "se",
 #'   col.pval = "pval",
 #'   col.metrics.set = "BETA",
-#'   verbose = FALSE
+#'   verbose = TRUE
 #' )
 #'
 #' # Check the result

@@ -162,7 +162,7 @@ sumstats.dt <- format_gwas(
   col.se.set = "se",
   col.pval.set = "pval",
   col.nsample.set = "nsamples",
-  verbose = FALSE
+  verbose = TRUE
 )
 head(sumstats.dt)
 
@@ -187,7 +187,7 @@ sumstats.dt <- format_gwas(
   col.eaf.set = "eaf",
   col.se.set = "se",
   col.pval.set = "pval",
-  verbose = FALSE
+  verbose = TRUE
 )
 head(sumstats.dt)
 
@@ -215,7 +215,7 @@ sumstats.dt <- format_gwas(
   col.se.set = "se",
   col.pval.set = "pval",
   col.nsample.set = "nsample",
-  verbose = FALSE
+  verbose = TRUE
 )
 head(sumstats.dt)
 }
