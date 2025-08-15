@@ -31,3 +31,4 @@ is.valid <- function(...) {
   # Check each element: not NA and not an empty string
   all(!is.na(cols) & cols != "")
 }
+

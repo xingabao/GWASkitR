@@ -300,6 +300,7 @@ COLOC.PWCoCo <- function(
   data <- list()
   data[["coloc.dat"]] <- coloc.dat
   data[["pop"]] <- basename(bfile)
+  data[["snp.sig"]] <- unlist(coloc.dat[1, c('SNP1', 'SNP2')])
 
   # Collect conditional analysis output files for each dataset
   if (verbose) logger::log_info("Collecting conditional analysis output files from {save_path}.")
@@ -323,6 +324,9 @@ COLOC.PWCoCo <- function(
   data[["sum_stats1"]] <- sumstat1.list
   data[["sum_stats2"]] <- sumstat2.list
   if (verbose) logger::log_info("Collected {length(sumstat1.list)} files for sum_stats1 and {length(sumstat2.list)} files for sum_stats2.")
+
+
+
 
   # Log completion and execution time
   end.time <- Sys.time()

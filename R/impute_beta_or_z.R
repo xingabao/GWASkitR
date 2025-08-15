@@ -40,6 +40,7 @@ impute_beta_or_z <- function(
     col.lp = FALSE,
     verbose = TRUE
 ) {
+
   # Load the logger package
   if (!requireNamespace("logger", quietly = TRUE)) {
     stop("Package 'logger' is required but not installed.")
@@ -56,15 +57,6 @@ impute_beta_or_z <- function(
 
   if (verbose) logger::log_info("Starting imputation of GWAS statistics.")
 
-  # Utility function to check if a column identifier is valid
-  is.valid <- function(...) {
-    args <- list(...)
-    if (length(args) == 0) return(FALSE)
-    if (any(sapply(args, is.null))) return(FALSE)
-    cols <- unlist(args)
-    all(!is.na(cols) & cols != "")
-  }
-
   # Check if SE column exists in the data frame
   if (!is.valid(col.se) || !col.se %in% names(sumstats)) {
     if (verbose) logger::log_error("Standard error column '{col.se}' not found in data frame.")
@@ -72,7 +64,7 @@ impute_beta_or_z <- function(
   }
 
   # Validate that exactly one of Beta, Z, or OR is provided
-  valid.cols <- sum(sapply(list(col.beta, col.z, col.or), is.valid))
+  valid.cols <- sum(sapply(list(col.beta, col.z, col.or), function(x) !is.null(x) && nchar(as.character(x)) > 0))
   if (valid.cols != 1) {
     if (verbose) logger::log_error("Exactly one of 'col.beta', 'col.z', or 'col.or' must be provided.")
     stop("Exactly one of 'col.beta', 'col.z', or 'col.or' must be provided.")
@@ -106,17 +98,18 @@ impute_beta_or_z <- function(
     # Compute Beta and Z-score from OR
     sumstats$beta <- log(sumstats[[col.or]])
     sumstats$Z <- sumstats$beta / sumstats[[col.se]]
-    # Optionally compute p-values if col.p is provided
-    if (is.valid(col.p)) {
-      if (verbose) logger::log_info("Computing p-values and storing in column '{col.p}'.")
-      sumstats[[col.p]] <- 2 * (1 - pnorm(abs(sumstats$Z)))
-      # Apply log10 transformation if col.lp is TRUE
-      if (col.lp) {
-        if (verbose) logger::log_info("Applying log10 transformation to p-values.")
-        sumstats$LP <- -log10(sumstats[[col.p]])
-      }
-    }
   }
+
+  # Optionally compute p-values if col.p is provided
+  # if (is.valid(col.p)) {
+  # if (verbose) logger::log_info("Computing p-values and storing in column '{col.p}'.")
+  # sumstats[[col.p]] <- 2 * (1 - pnorm(abs(sumstats$Z)))
+  # Apply log10 transformation if col.lp is TRUE
+  if (col.lp) {
+    if (verbose) logger::log_info("Applying log10 transformation to p-values.")
+    sumstats$LP <- -log10(sumstats[[col.p]])
+  }
+  # }
 
   # Warn about potential NA values in computed columns
   if (any(is.na(sumstats$Z)) || any(is.na(sumstats$OR)) || any(is.na(sumstats$beta))) {

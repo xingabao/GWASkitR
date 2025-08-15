@@ -199,8 +199,6 @@ read.vcf <- function(
     }
   }
 
-  if (!multiple) { sample.cols <- sample.cols[1] }
-
   data = list()
   DF.this <- data.frame()
   if ("FORMAT" %in% names(DF)) {

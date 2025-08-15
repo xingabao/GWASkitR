@@ -211,7 +211,7 @@ format_gwas.default <- function(
       if (any(endsWith(sumstats, suffix = c('vcf', 'vcf.gz')))) {
         sumstats <- read.vcf(vcfFile = sumstats, multiple = FALSE, remove_qual_filter_info = TRUE, save.path = NULL, verbose = FALSE, nrows = 1000)
       } else {
-        sumstats <- as.data.frame(data.table::fread(sumstats, showProgress = FALSE), nrows = 1000)
+        sumstats <- as.data.frame(data.table::fread(sumstats, showProgress = FALSE, nrows = 1000))
       }
     } else if (is.character(sumstats)) {
       if (verbose) logger::log_error("The file '{sumstats}' does not exist.")
@@ -228,14 +228,14 @@ format_gwas.default <- function(
   # Validate that required columns exist in the data
   missing.cols <- setdiff(.cols, names(sumstats))
   if (length(missing.cols) > 0) {
-    if (verbose) logger::log_warn("These are the column names in the input data: {paste(names(sumstats), collapse=', ')}")
+    if (verbose) logger::log_warn("These are the column names in the input data: {paste(names(sumstats), collapse = ', ')}")
     if (verbose) logger::log_info("Preview of the first few rows of input data:")
     print(utils::head(sumstats))
-    if (verbose) logger::log_error("Missing required columns: {paste(missing.cols, collapse=', ')}")
-    stop("Missing columns: ", paste(missing.cols, collapse=', '))
+    if (verbose) logger::log_error("Missing required columns: {paste(missing.cols, collapse = ', ')}")
+    stop("Missing columns: ", paste(missing.cols, collapse = ', '))
   } else if (length(.cols) == 0) {
     if (verbose) logger::log_warn("No columns exist in the data frame, please check.")
-    if (verbose) logger::log_warn("These are the column names in the input data: {paste(names(sumstats), collapse=', ')}")
+    if (verbose) logger::log_warn("These are the column names in the input data: {paste(names(sumstats), collapse = ', ')}")
     if (verbose) logger::log_info("Preview of the first few rows of input data:")
     print(utils::head(sumstats))
   }

@@ -9,5 +9,5 @@ BiocManager::install("MungeSumstats", update = FALSE, ask = FALSE)
 BiocManager::install("GenomicRanges", update = FALSE, ask = FALSE)
 BiocManager::install("GenomeInfoDb", update = FALSE, ask = FALSE)
 BiocManager::install("rtracklayer", update = FALSE, ask = FALSE)
-
+devtools::install_github("boxiangliu/locuscomparer")
 remotes::install_github("xingabao/GWASkitR")

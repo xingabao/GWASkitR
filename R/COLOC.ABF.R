@@ -85,7 +85,7 @@
 #'
 #' # Step 2. Organize the results for visualization.
 #' coloc.dat <- coloc_result_to_plot(
-#'   data = ABF.res,
+#'   x = ABF.res,
 #'   plink = "/your/path/to/plink/plink.exe",
 #'   bfile = "/your/path/to/plink/plink/1kg.v3/EUR"
 #' )
